@@ -10,6 +10,7 @@ from agent.graph import build_graph
 from agent.prompts import build_initial_messages
 from core.config import load_settings
 from core.logging import configure_logging
+from core.observability import build_langfuse_run_config, flush_langfuse
 from graph.neo4j_client import Neo4jClient
 from retrieval.context_builder import build_resolved_context
 
@@ -82,7 +83,9 @@ def run_graphrag_agent(
             "errors": [],
         }
         recursion_limit = max(4, settings.max_tool_iterations * 2 + 2)
-        state = graph.invoke(initial_state, config={"recursion_limit": recursion_limit})
+        run_config = {"recursion_limit": recursion_limit}
+        run_config.update(build_langfuse_run_config(settings))
+        state = graph.invoke(initial_state, config=run_config)
         messages = state.get("messages", [])
         tool_results = _extract_tool_results(messages)
         resolved_context = build_resolved_context(tool_results)
@@ -96,4 +99,5 @@ def run_graphrag_agent(
             "errors": state.get("errors", []),
         }
     finally:
+        flush_langfuse(settings)
         client.close()

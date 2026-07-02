@@ -26,6 +26,11 @@ class EnvSettings(BaseSettings):
     llm_model: str = Field(default="local-model", alias="LLM_MODEL")
     llm_temperature: float | None = Field(default=None, alias="LLM_TEMPERATURE")
     log_level: str | None = Field(default=None, alias="LOG_LEVEL")
+    langfuse_enabled: bool = Field(default=False, alias="LANGFUSE_ENABLED")
+    langfuse_base_url: str = Field(default="http://localhost:3000", alias="LANGFUSE_BASE_URL")
+    langfuse_public_key: str | None = Field(default=None, alias="LANGFUSE_PUBLIC_KEY")
+    langfuse_secret_key: str | None = Field(default=None, alias="LANGFUSE_SECRET_KEY")
+    langfuse_session_id: str = Field(default="local-dev", alias="LANGFUSE_SESSION_ID")
 
 
 class Settings(BaseSettings):
@@ -44,6 +49,11 @@ class Settings(BaseSettings):
     log_level: str
     max_tool_iterations: int
     require_tool_for_cross_reference: bool
+    langfuse_enabled: bool
+    langfuse_base_url: str
+    langfuse_public_key: str | None
+    langfuse_secret_key: str | None
+    langfuse_session_id: str
     schema_profile: SchemaProfile
 
 
@@ -98,5 +108,10 @@ def load_settings(config_path: str | None = None) -> Settings:
         require_tool_for_cross_reference=bool(
             agent_config.get("require_tool_for_cross_reference", True)
         ),
+        langfuse_enabled=env.langfuse_enabled,
+        langfuse_base_url=env.langfuse_base_url,
+        langfuse_public_key=env.langfuse_public_key,
+        langfuse_secret_key=env.langfuse_secret_key,
+        langfuse_session_id=env.langfuse_session_id,
         schema_profile=load_schema_profile(profile_path),
     )

@@ -48,6 +48,22 @@ LLM_MODEL=local-model
 python scripts/run_agent.py --question "What actions should I perform if fault code 3310B01 occurs?"
 ```
 
+## Optional Local Langfuse Tracing
+
+Langfuse tracing is disabled by default. To use a local Langfuse instance, start Langfuse on
+`http://localhost:3000`, create a project, copy its API keys, then set:
+
+```env
+LANGFUSE_ENABLED=true
+LANGFUSE_BASE_URL=http://localhost:3000
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_SESSION_ID=local-dev
+```
+
+When enabled, the agent passes a Langfuse `CallbackHandler` into the LangGraph run config so LLM
+calls, tool calls, and graph execution are visible in the local Langfuse UI.
+
 ## Inspect Neo4j
 
 ```bash
@@ -64,5 +80,4 @@ pytest
 ## Reproducibility
 
 Configuration is split between `.env`, `configs/default.yaml`, and a schema profile YAML file. Cypher is generated only from whitelisted templates and validated schema identifiers. User values are always passed as query parameters.
-
 
