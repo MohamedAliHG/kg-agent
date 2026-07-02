@@ -1,0 +1,19 @@
+neo4j:
+  database: neo4j
+
+schema_profile_path: configs/schema_profiles/technical_manual.yaml
+
+retrieval:
+  max_results: 5
+
+logging:
+  level: INFO
+
+llm:
+  provider: openai_compatible
+  temperature: 0
+  tool_choice: auto
+
+agent:
+  max_tool_iterations: 4
+  require_tool_for_cross_reference: true
