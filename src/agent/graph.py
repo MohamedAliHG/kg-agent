@@ -23,13 +23,16 @@ def build_graph(client: Neo4jClient, settings: Settings):
         base_url=settings.llm_base_url,
         temperature=settings.llm_temperature,
     )
-    tools = build_tool_registry(client, settings.schema_profile, default_limit=settings.max_results)
+    tools = build_tool_registry(client, settings, llm)
     call_model = create_call_model_node(llm, tools)
 
     builder = StateGraph(GraphRAGState)
     builder.add_node("call_model", call_model)
-    builder.add_node("tools", ToolNode(tools))
     builder.add_edge(START, "call_model")
-    builder.add_conditional_edges("call_model", tools_condition, {"tools": "tools", END: END})
-    builder.add_edge("tools", "call_model")
+    if tools:
+        builder.add_node("tools", ToolNode(tools))
+        builder.add_conditional_edges("call_model", tools_condition, {"tools": "tools", END: END})
+        builder.add_edge("tools", "call_model")
+    else:
+        builder.add_edge("call_model", END)
     return builder.compile()

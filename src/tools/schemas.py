@@ -31,3 +31,18 @@ class PreparationContextResult(BaseModel):
     chunk_text: str
     page_no: int | str | None = None
     document_id: str | None = None
+
+
+class Text2CypherInput(BaseModel):
+    """Input schema for experimental Text2Cypher graph queries."""
+
+    question: str = Field(min_length=1)
+    limit: int = Field(default=10, ge=1, le=100)
+
+
+class Text2CypherResult(BaseModel):
+    """Output schema for experimental Text2Cypher graph queries."""
+
+    cypher: str
+    rows: list[dict]
+    row_count: int

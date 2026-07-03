@@ -59,6 +59,17 @@ def main() -> None:
         print("- none")
 
     if args.debug:
+        text2cypher_results = [
+            row
+            for row in result["tool_results"]
+            if isinstance(row, dict) and row.get("cypher") is not None
+        ]
+        if text2cypher_results:
+            print("\nGenerated Cypher:")
+            for row in text2cypher_results:
+                print(row["cypher"])
+                print(f"row_count={row.get('row_count', 0)}")
+
         print("\nRaw tool results:")
         print(json.dumps(result["tool_results"], indent=2))
 

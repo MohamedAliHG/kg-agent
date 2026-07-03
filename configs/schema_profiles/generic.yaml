@@ -1,0 +1,119 @@
+name: generic
+
+document_label: Document
+document_id_property: id
+
+chunk_label: Chunk
+chunk_id_property: id
+chunk_text_property: text
+chunk_page_property: page_no
+
+entity_label: Entity
+entity_type_property: type
+entity_id_property: id
+entity_name_property: name
+entity_code_property: code
+entity_raw_text_property: raw_text
+
+chunk_entity_relationship: HAS_ENTITY
+chunk_document_relationship: PART_OF
+
+entity_types:
+  - Concept
+  - Topic
+  - Procedure
+  - Requirement
+  - Identifier
+
+relationships:
+  - source: Chunk
+    type: HAS_ENTITY
+    target: Entity
+  - source: Chunk
+    type: PART_OF
+    target: Document
+  - source: Concept
+    type: RELATED_TO
+    target: Concept
+  - source: Topic
+    type: MENTIONS
+    target: Concept
+  - source: Procedure
+    type: REFERENCES
+    target: Requirement
+  - source: Identifier
+    type: IDENTIFIES
+    target: Concept
+
+label_aliases: {}
+
+text2cypher:
+  description: >
+    Generic document knowledge graph. Use Chunk nodes as evidence for answers and return chunk
+    text whenever possible.
+
+  rules:
+    - Relationship direction must exactly match the schema.
+    - Prefer Entity.type predicates when filtering domain entities.
+    - For answer generation, retrieve Chunk.text as supporting context whenever possible.
+    - Use coalesce on common Entity value properties when matching user-provided identifiers.
+    - For natural-language entity names, avoid exact full-phrase matching when punctuation, casing,
+      or line breaks may differ.
+    - Prefer matching several stable lowercase tokens from the user question against coalesced
+      Entity.name, Entity.raw_text, and Entity.id.
+
+  grounded_values:
+    identifiers:
+      description: Generic IDs, codes, document references, or other named identifiers.
+      pattern: "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+      properties:
+        - code
+        - name
+        - id
+      examples:
+        - "ITEM-001"
+        - "REF:A-1"
+    entity_names:
+      description: Human-readable names may have punctuation, casing, or line-break drift.
+      properties:
+        - name
+        - raw_text
+        - id
+      examples:
+        - "example subsystem"
+        - "sample operating condition"
+
+  examples:
+    - question: Which chunks mention ITEM-001?
+      notes: Looks up a generic identifier through common Entity value properties and returns chunk evidence.
+      cypher: |
+        MATCH (entity:Entity)<-[:HAS_ENTITY]-(chunk:Chunk)
+        WHERE coalesce(entity.code, entity.name, entity.id) = "ITEM-001"
+        OPTIONAL MATCH (chunk)-[:PART_OF]->(document:Document)
+        RETURN
+          chunk.id AS chunk_id,
+          chunk.text AS chunk_text,
+          chunk.page_no AS page_no,
+          document.id AS document_id
+        LIMIT 5
+    - question: What context is available for the sample operating condition?
+      notes: Uses stable token matching instead of exact full-phrase matching.
+      cypher: |
+        MATCH (entity:Entity)<-[:HAS_ENTITY]-(chunk:Chunk)
+        WHERE all(token IN ["sample", "operating", "condition"]
+          WHERE toLower(coalesce(entity.name, entity.raw_text, entity.id)) CONTAINS token)
+        OPTIONAL MATCH (chunk)-[:PART_OF]->(document:Document)
+        RETURN
+          coalesce(entity.name, entity.raw_text, entity.id) AS matched_entity,
+          chunk.id AS chunk_id,
+          chunk.text AS chunk_text,
+          chunk.page_no AS page_no,
+          document.id AS document_id
+        LIMIT 5
+    - question: Count entity types in the graph.
+      notes: Summarizes the available Entity.type values.
+      cypher: |
+        MATCH (entity:Entity)
+        RETURN entity.type AS entity_type, count(*) AS count
+        ORDER BY count DESC
+        LIMIT 5

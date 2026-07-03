@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     schema_profile_path: str
     max_results: int
     log_level: str
+    tool_mode: str
     max_tool_iterations: int
     require_tool_for_cross_reference: bool
     langfuse_enabled: bool
@@ -74,7 +75,7 @@ def load_settings(config_path: str | None = None) -> Settings:
     config = _read_yaml(path)
     env = EnvSettings()
 
-    schema_profile_path = str(config.get("schema_profile_path", "configs/schema_profiles/technical_manual.yaml"))
+    schema_profile_path = str(config.get("schema_profile_path", "configs/schema_profiles/generic.yaml"))
     profile_path = Path(schema_profile_path)
     if not profile_path.is_absolute():
         profile_path = root / profile_path
@@ -104,6 +105,7 @@ def load_settings(config_path: str | None = None) -> Settings:
         schema_profile_path=schema_profile_path,
         max_results=int(retrieval_config.get("max_results", 5)),
         log_level=log_level,
+        tool_mode=str(agent_config.get("tool_mode", "predefined")),
         max_tool_iterations=int(agent_config.get("max_tool_iterations", 4)),
         require_tool_for_cross_reference=bool(
             agent_config.get("require_tool_for_cross_reference", True)

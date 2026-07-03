@@ -17,6 +17,32 @@ class RelationshipProfile(BaseModel):
     target: str
 
 
+class GroundedValueHint(BaseModel):
+    """Hints for grounding common literal values during Text2Cypher generation."""
+
+    description: str | None = None
+    pattern: str | None = None
+    properties: list[str] = Field(default_factory=list)
+    examples: list[str] = Field(default_factory=list)
+
+
+class Text2CypherExample(BaseModel):
+    """A few-shot Text2Cypher example loaded from the schema profile."""
+
+    question: str
+    cypher: str
+    notes: str | None = None
+
+
+class Text2CypherProfile(BaseModel):
+    """Schema-profile-specific Text2Cypher prompting configuration."""
+
+    description: str | None = None
+    rules: list[str] = Field(default_factory=list)
+    grounded_values: dict[str, GroundedValueHint] = Field(default_factory=dict)
+    examples: list[Text2CypherExample] = Field(default_factory=list)
+
+
 class SchemaProfile(BaseModel):
     """A typed representation of graph-shape names loaded from YAML."""
 
@@ -38,6 +64,7 @@ class SchemaProfile(BaseModel):
     entity_types: list[str] = Field(default_factory=list)
     relationships: list[RelationshipProfile] = Field(default_factory=list)
     label_aliases: dict[str, list[str]] = Field(default_factory=dict)
+    text2cypher: Text2CypherProfile | None = None
 
     def aliases_for(self, entity_type: str) -> list[str]:
         """Return the canonical entity type plus configured aliases."""

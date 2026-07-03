@@ -15,7 +15,7 @@ def create_call_model_node(
     tools: Sequence[BaseTool],
 ) -> Callable[[GraphRAGState], dict[str, Any]]:
     """Create a model-calling node bound to graph tools."""
-    llm_with_tools = llm.bind_tools(tools)
+    llm_with_tools = llm.bind_tools(tools) if tools else llm
 
     def call_model(state: GraphRAGState) -> dict[str, Any]:
         response = llm_with_tools.invoke(state["messages"])
